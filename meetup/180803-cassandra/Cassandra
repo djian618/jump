@@ -187,10 +187,31 @@ Node -> log-structured storage
          
          Read on Disk
          https://docs.datastax.com/en/cassandra/2.1/cassandra/dml/dml_write_path_c.html
+         https://academy.datastax.com/units/internal-architecture-read-path?resource=ds201-foundations-apache-cassandra
             easy case : Nodes read the memtable, then sstables
             hard case : search all sstables
             Bloomfilter
          
-        
+        Compaction:
+        https://academy.datastax.com/units/internal-architecture-compaction?resource=ds201-foundations-apache-cassandra
+          Why: 1. save disk space 2. faster reads
+          Scheduling: per-cpu or Dedicated core
+          When: continue serving old sstable while doing compaction
+          Compaction Strategies:
+                                1. Size Compaction
+                                   the idea here is to trigger compaction when we have enough (four by default) similarly sized SSTable
+                                   In this manner, we have several size tiers (small sstables, large sstables, even-larger sstables, etc.) 
+                                   and in each tier we have roughly the same number of files; 
+                                   When one tier is full, we merge all its tables to one table in the next tier.
+                                   
+                                   SizeTieredCompactionStrategy is great if rows are written once and never modified 
+                                   (or written a few times and then not modified again). 
+                                   In that case, each row will eventually end up being written as a whole to one compacted SSTable, 
+                                   and reads are efficient
+                                   
+                                   Cons: Can hold onto stale data too long. Amount of memory needed increases over time
           
-            
+                                 2. Level Compaction  
+                                 https://www.slideshare.net/DataStax/the-missing-manual-for-leveled-compaction-strategy-wei-deng-datastax-cassandra-summit-2016
+                                 
+                                  
